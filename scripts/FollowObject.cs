@@ -7,6 +7,7 @@ public class FollowObject : MonoBehaviour
     public bool Track;
     public GameObject TargetObjectPosition;
     public GameObject TargetObjectAngle;
+    public GameObject TargetPlayer;
     public float smoothSpeed = 0.125f;
     public bool ThrowObject;
     public float ThrowForce;
@@ -17,15 +18,24 @@ public class FollowObject : MonoBehaviour
     public float OrbitDistance;
     public float x_Orbit_Position;
     public float y_Orbit_Position;
-    public Camera targetCamera;
-    public LayerMask newCullingMask;
-    private LayerMask oldCullingMask;
-
-
-
     private Renderer or;
     private Rigidbody rb;
     private BoxCollider bc;
+    private int OrginalLayer;
+
+
+
+public void ChangeLayersInChildren(Transform parent,string newLayerName)
+    {
+
+        gameObject.layer = LayerMask.NameToLayer(newLayerName);
+        foreach (Transform child in transform)
+        {
+            GameObject childObject = child.gameObject;
+            childObject.layer = LayerMask.NameToLayer(newLayerName);
+        }
+        
+    }
 
 
 
@@ -34,7 +44,7 @@ public class FollowObject : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         bc = GetComponent<BoxCollider>();
         or = GetComponent<Renderer>();
-        oldCullingMask = targetCamera.cullingMask;
+        OrginalLayer = gameObject.layer; 
     }
 
     void LateUpdate()
@@ -64,9 +74,8 @@ public class FollowObject : MonoBehaviour
                     transform.eulerAngles = new Vector3(0,0,0);
                 }
                 transform.position = smoothedPosition;
-                if (targetCamera != null){
-                    targetCamera.cullingMask = newCullingMask.value;
-                }
+                ChangeLayersInChildren(transform,"TransparentFX");
+
 
             }
 
@@ -76,17 +85,16 @@ public class FollowObject : MonoBehaviour
                     rb.isKinematic = false;
                     bc.isTrigger = false;
                     or.enabled = true;
-                    if (targetCamera != null){
-                        targetCamera.cullingMask = oldCullingMask.value;
-                    }
+                    ChangeLayersInChildren(transform,"Default");
                     if (ThrowObject == true){
                         float angleY = transform.eulerAngles.y;
                         float angleX = transform.eulerAngles.x;
                         transform.eulerAngles +=new Vector3(0,90,0);
+                        rb.velocity = TargetPlayer.GetComponent<Rigidbody>().velocity;
                         rb.AddForce(new Vector3(ThrowForce * Mathf.Sin(angleY*Mathf.Deg2Rad) * Mathf.Cos(Mathf.Deg2Rad*angleX),
                         -ThrowForce * Mathf.Sin(angleX*Mathf.Deg2Rad),
                         ThrowForce * Mathf.Cos(angleY*Mathf.Deg2Rad) * Mathf.Cos(Mathf.Deg2Rad*angleX)),ForceMode.Impulse);
-                    } 
+                    }
                 }
             }
         }

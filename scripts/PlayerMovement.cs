@@ -8,48 +8,84 @@ public class movement : MonoBehaviour
     public float speed = 5;
     public float jumpForce;
     public float MovingForce;
-    public float ContactFriction;
-
+    
     private bool Colliding_On_y = false;
+    private bool Colliding_On_x = false;
+    private bool Colliding_On_z = false;
+    private float contactAngleWithX = 0f;
+    private float contactAngleWithY = 0f;
+
     private float rotationX = 0f;
     private Rigidbody rb;
     private float OldDrag;
     private float x = 0;
     private float z = 0;
+
+    private float fixedUpdateTime;
+    private bool DoubleJump;
+
     // Start is called before the first frame update
+
+    
+
+
+    void OnCollisionStay(Collision collision){
+
+        CalculateCollisionAngles(collision);
+        foreach (ContactPoint contact in collision.contacts)
+        {
+            if (Vector3.Dot(contact.normal, Vector3.up) > 0.1f && contactAngleWithY <= 20){
+                // Collision occurred along the Y-axis
+                Colliding_On_y = true;
+            }
+            if (Mathf.Abs(collision.contacts[0].normal.x) > 0.1f){
+                Colliding_On_x = true;
+            }
+            if (Mathf.Abs(collision.contacts[0].normal.z) > 0.1f){
+                Colliding_On_z = true;
+            }
+        }
+    }
+
+    private void CalculateCollisionAngles(Collision collision)
+    {
+        if (collision.contacts.Length > 0)
+        {
+            Vector3 localNormal = collision.contacts[0].normal;
+            Vector3 worldNormal = collision.transform.TransformDirection(localNormal);
+            contactAngleWithX = Vector3.Angle(worldNormal, Vector3.right);
+            contactAngleWithY = Vector3.Angle(worldNormal, Vector3.up);
+        }
+    }
+
+
+    Vector3 move_foraward(float axis_local,float angle, bool GetLocalAxis){
+        float yRotation = 0;
+        if (GetLocalAxis == true){
+            yRotation = transform.eulerAngles.y;
+        }
+        return new Vector3(axis_local*Mathf.Sin((yRotation + angle) * Mathf.Deg2Rad),0,axis_local*Mathf.Cos((yRotation + angle) * Mathf.Deg2Rad));
+        
+    } 
+
+    void OnCollisionExit(Collision collision){
+        Colliding_On_x = false;
+        Colliding_On_y = false;
+        Colliding_On_z = false;
+        contactAngleWithX = 0;
+        contactAngleWithY = 0;
+    }
+
     void Start(){
         Colliding_On_y = true;
         rb = GetComponent<Rigidbody>();
         OldDrag = rb.drag;
+        rb.freezeRotation = true;
+        fixedUpdateTime = Time.fixedTime;
     }
 
-    void OnCollisionEnter(Collision collision){
-        foreach (ContactPoint contact in collision.contacts)
-        {
-            if (Vector3.Dot(contact.normal, Vector3.up) > 0.1f)
-            {
-                // Collision occurred along the Y-axis
-                Colliding_On_y = true;
-                break;
-            }
-        }
-    }
 
-    void OnCollisionStay(Collision collision){
-        foreach (ContactPoint contact in collision.contacts)
-        {
-            if (Vector3.Dot(contact.normal, Vector3.up) > 0.1f)
-            {
-                // Collision occurred along the Y-axis
-                Colliding_On_y = true;
-                break;
-            }
-        }
-    }
 
-    void OnCollisionExit(Collision collision){
-        Colliding_On_y = false;
-    }
     // Update is called once per frame
     void Update()
     {
@@ -90,26 +126,39 @@ public class movement : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.D)){
             x -= +1;
             }
-        
-        float yRotation = transform.eulerAngles.y;
-        
+
+        Vector3 movement = move_foraward(z,0,true)*MovingForce + move_foraward(x,90,true)*MovingForce;
 
 
-        Vector3 movement = new Vector3(z * MovingForce * Mathf.Sin(yRotation * Mathf.Deg2Rad) + x * MovingForce* Mathf.Sin((yRotation+90) * Mathf.Deg2Rad) , 0, z * MovingForce* Mathf.Cos(yRotation * Mathf.Deg2Rad)+ x *speed* Mathf.Cos((yRotation+90) * Mathf.Deg2Rad));
-        Debug.Log(movement);
         if (Vector3.Distance(rb.velocity,new Vector3 (0,0,0)) >= speed){
             movement = new Vector3 (0,0,0);
         }
-        if (Colliding_On_y == true && x == 0 && z == 0){
-            rb.drag = ContactFriction;
+        if (Colliding_On_y == false){
+            float jumpTime;
+            jumpTime = Time.fixedTime - fixedUpdateTime;
+            rb.drag = 0.2f;
+            movement *=0.2f;
+            if (jumpTime >= 0.2f){
+                movement *= (0.4f/jumpTime);
+            }
+            if (Input.GetKeyDown(KeyCode.Space) && DoubleJump == false)
+            {
+                if (Colliding_On_x == true || Colliding_On_z == true){
+                    rb.AddForce(new Vector3(0,jumpForce,0), ForceMode.Impulse);
+                    fixedUpdateTime = Time.fixedTime;
+                    DoubleJump = true;
+                }
+            }
+            if (Vector3.Distance(rb.velocity,new Vector3 (0,0,0)) >= speed){
+                movement = new Vector3 (0,0,0);
+            }
         }
         else{
             rb.drag = OldDrag;
+            fixedUpdateTime = Time.fixedTime;
+            DoubleJump = false;
         }
+
         rb.AddForce(movement,ForceMode.Acceleration);
-        
-        rb.freezeRotation = true;
     }
-
-
 }
