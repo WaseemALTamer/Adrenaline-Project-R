@@ -20,7 +20,7 @@ public class movement : MonoBehaviour
     private float OldDrag;
     private float x = 0;
     private float z = 0;
-
+    private bool dragSwitcherOnce;
     private float fixedUpdateTime;
     private bool DoubleJump;
 
@@ -82,6 +82,7 @@ public class movement : MonoBehaviour
         OldDrag = rb.drag;
         rb.freezeRotation = true;
         fixedUpdateTime = Time.fixedTime;
+        dragSwitcherOnce = true;
     }
 
 
@@ -137,7 +138,8 @@ public class movement : MonoBehaviour
             float jumpTime;
             jumpTime = Time.fixedTime - fixedUpdateTime;
             rb.drag = 0.2f;
-            movement *=0.2f;
+            movement *=0.4f;
+            dragSwitcherOnce = true;
             if (jumpTime >= 0.2f){
                 movement *= (0.4f/jumpTime);
             }
@@ -154,7 +156,11 @@ public class movement : MonoBehaviour
             }
         }
         else{
+            if (dragSwitcherOnce == true){
             rb.drag = OldDrag;
+                dragSwitcherOnce = false;
+            }
+            
             fixedUpdateTime = Time.fixedTime;
             DoubleJump = false;
         }
