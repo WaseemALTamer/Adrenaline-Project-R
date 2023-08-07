@@ -115,6 +115,7 @@ MonoBehaviour:
   DashDragTime: 0.4
   DashCoolDown: 2
   CalDashForce: {x: 0, y: 0, z: 0}
+  TerminalVelocityDash: 9
   LongJumbAvalibality: 1
   LongJumbButton: 113
   LongJumbForce: {x: 0, y: 500, z: 400}

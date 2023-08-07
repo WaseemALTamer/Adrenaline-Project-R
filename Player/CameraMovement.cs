@@ -7,6 +7,7 @@ public class CameraMovement : MonoBehaviour
 
     public bool TrackRotation;
     public bool TrackPosition;
+    private Rigidbody TrackedRB;
     public bool Y_axisRotation;
     public GameObject TrackObject;
     public GameObject NetworkObject;
@@ -15,13 +16,14 @@ public class CameraMovement : MonoBehaviour
     public float rotationSpeed;
     private float rotationX = 0f;
     private float rotationY = 0f;
-    private float smoothSpeed = 0.4f;
+    private float smoothSpeed = 0.325f;
+    private float CalSmoothed;
 
     void TrackPositionFun()
     {
-        if (TrackObject != null)
-        {
+        if (TrackObject != null){
             Vector3 desiredPosition = TrackObject.transform.position + new Vector3(0f, 0.8f, 0f);
+            CalSmoothed = smoothSpeed;
             Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
             transform.position = smoothedPosition;
         }
@@ -29,6 +31,7 @@ public class CameraMovement : MonoBehaviour
 
     void Start(){
         rotationSpeed = NetworkObject.GetComponent<Movement>().rotationSpeed;
+        TrackedRB = TrackObject.GetComponent<Rigidbody>();
         rotationY = TrackObject.transform.eulerAngles.y;
     }
 
