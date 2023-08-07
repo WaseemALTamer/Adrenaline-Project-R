@@ -5,24 +5,60 @@ using UnityEngine;
 
 public class Movement : NetworkBehaviour
 {
+    //public GameObject
     public GameObject Object;
     public KeyCode forward;
     public KeyCode backward;
     public KeyCode right;
     public KeyCode left;
-    public float speed;
-    public float JumbForce;
-    public float rotationSpeed = 3f;
-    public bool JumbAvaliblity; // read only
+    public float Acceleration;
+    public float rotationSpeed;
+    public float TerminalVelocity;
+    public Vector3 JumbForce;
+
+
+    //Layers
+    public LayerMask GroundLayer;
+    public LayerMask WallLayer;
+    
 
 
 
-
+    //transform.unityGraph
     private Rigidbody Rigidbody;
     private float rotationX = 0f;
     private float z;
     private float x;
+
+
+    //Dash
+    public bool DashAvalibality;
+    public KeyCode DashButton;
+    public Vector3 DashForce;
+    private bool DashState;
+    public float DashDragTime;
+    public float DashCoolDown;
+    public Vector3 CalDashForce;
+    private float DragOrginal;
+    private float DashTimerDrag;
+    private float DashTimerCooldown;
+
+    //LongJumb
+    public bool LongJumbAvalibality;
+    public KeyCode LongJumbButton;
+    public Vector3 LongJumbForce;
+    private bool LongJumbState;
+    public float LongJumbCoolDown;
+    private Vector3 CalLongJumbForce;
+    private float LongJumbTimer;
+    
+    
+    
+    //grounded and Jumb and (double Jumb)! Progress
     private bool JumbState;
+    private bool Grounded;
+    private float drag;
+    private float AirDrag;
 
     //server pridcation
     private Vector3 ServerPostion;
@@ -42,14 +78,11 @@ public class Movement : NetworkBehaviour
     Vector3 move_forward(float axis_local, float angle, bool GetLocalAxis)
     {
         float yRotation = 0;
-        if (GetLocalAxis == true)
-        {
+        if (GetLocalAxis == true){
             yRotation = Rigidbody.transform.eulerAngles.y;
         }
         return new Vector3(axis_local * Mathf.Sin((yRotation + angle) * Mathf.Deg2Rad), 0, axis_local * Mathf.Cos((yRotation + angle) * Mathf.Deg2Rad));
     }
-
-
     
 
     void Start()
@@ -72,6 +105,9 @@ public class Movement : NetworkBehaviour
         Rigidbody.freezeRotation = true;
         Currently_Correcting = false;
         JumbState = false;
+        drag = Rigidbody.drag;
+        AirDrag = 0.2f;
+        DragOrginal = Rigidbody.drag;
     }
 
     void Update()
@@ -90,11 +126,32 @@ public class Movement : NetworkBehaviour
         
         rotationX += Input.GetAxis("Mouse X") * rotationSpeed;
         Rigidbody.transform.localRotation = Quaternion.Euler(0, rotationX, 0f);
-        if (JumbAvaliblity == true && Input.GetKey(KeyCode.Space) && JumbState == false){
+        RaycastHit hitGround;
+        Grounded = Physics.Raycast(Rigidbody.transform.position, Vector3.down, out hitGround, 1.01f, GroundLayer);
+        if (Input.GetKeyDown(KeyCode.Space) && JumbState == false && Grounded == true){
             JumbState = true;
         }
-        if (IsOwnedByServer) print(true);else{
-            print(false);
+        if (Grounded == true){
+            Rigidbody.drag = drag;
+        }
+        //OnLongJumb
+        if (LongJumbAvalibality == true){
+            if (Input.GetKeyDown(LongJumbButton) && LongJumbState == false && Time.fixedTime >= LongJumbTimer){
+                LongJumbState = true;
+                LongJumbTimer = Time.fixedTime + LongJumbCoolDown;
+            }
+        }
+        
+        //OnDash
+        if (DashAvalibality == true){
+            if (Input.GetKeyDown(DashButton) && DashState== false && Time.fixedTime >= DashTimerCooldown){
+                DashState = true;
+                drag = 0.2f;
+                DashTimerDrag = Time.fixedTime + DashDragTime;
+                DashTimerCooldown = Time.fixedTime + DashCoolDown;
+            }if(Time.fixedTime >= DashTimerDrag){
+                drag = DragOrginal;
+            }
         }
     }
 
@@ -104,6 +161,7 @@ public class Movement : NetworkBehaviour
             print($"Corrected by:{ClientPostionArray[ServerCurrentTick] - ServerPostionArray[ServerCurrentTick]}");
             HandleCorrection();
         }
+        RotationServerRpc(Rigidbody.transform.eulerAngles);
         
         z = 0; // Reset z and x axes each Tick
         x = 0;
@@ -113,64 +171,100 @@ public class Movement : NetworkBehaviour
         if (Input.GetKey(right)) x += 1;
         if (Input.GetKey(left)) x += -1;
 
-        Vector3 desiredForce = (move_forward(z, 0, true) + move_forward(x, 90, true)) * speed;
-        if (Vector3.Distance(Rigidbody.velocity ,new Vector3(0,0,0))> 5){
+        Vector3 desiredForce = (move_forward(z, 0, true) + move_forward(x, 90, true)) * Acceleration;
+        if (Vector3.Distance(Rigidbody.velocity ,new Vector3(0,0,0))> TerminalVelocity){
             desiredForce = new Vector3(0, 0, 0);
         }
-        Rigidbody.AddForce(desiredForce, ForceMode.Acceleration);
-        ClientPostionArray[Current_Tick] = Rigidbody.transform.position;
+        if (Grounded == false){
+           desiredForce *= 0.2f;
+           Rigidbody.drag = AirDrag;
+        }
         if (IsOwnedByServer == true){
-            MovementServerRpc(new Vector3(0,0,0),0);
+            Rigidbody.AddForce(desiredForce, ForceMode.Acceleration);
             if (JumbState == true){
-                Rigidbody.AddForce(new Vector3(0,JumbForce,0),ForceMode.Impulse);
-                JumbState = false;
+                Rigidbody.AddForce(JumbForce,ForceMode.Impulse);
             }
-            return;
-        }
-        if (JumbState == true){
-            MovementServerRpc(desiredForce,JumbForce);
+            if (DashState == true){
+                CalDashForce = move_forward(DashForce.z,0,true);
+                Rigidbody.AddForce(CalDashForce,ForceMode.Impulse);
+            }
+            if (LongJumbState == true){
+                CalLongJumbForce = move_forward(LongJumbForce.z,0, true) + new Vector3(0,LongJumbForce.y,0);
+                Rigidbody.AddForce(CalLongJumbForce,ForceMode.Impulse);
+            }
+            Vector3 Normal = new Vector3(0,0,0);
+            MovementServerRpc(Normal,Normal,false,Normal,false,Normal,false,Rigidbody.drag);
             JumbState = false;
+            DashState = false;
+            LongJumbState = false; 
+            ServerPostion = Rigidbody.transform.position;
+            Current_Tick = ServerCurrentTick;
+            ClientPostionArray[Current_Tick] = Rigidbody.transform.position;
+            return;
         }else{
-            MovementServerRpc(desiredForce,0);
+            Rigidbody.AddForce(desiredForce, ForceMode.Acceleration);
+            if (JumbState == true){
+                Rigidbody.AddForce(JumbForce,ForceMode.Impulse);
+            }
+            if (DashState == true){
+                CalDashForce = move_forward(DashForce.z,0,true);
+                Rigidbody.AddForce(CalDashForce,ForceMode.Impulse);
+            }
+            if (LongJumbState == true){
+                CalLongJumbForce = move_forward(LongJumbForce.z,0, true) + new Vector3(0,LongJumbForce.y,0);
+                Rigidbody.AddForce(CalLongJumbForce,ForceMode.Impulse);
+            }
+
+            MovementServerRpc(desiredForce,JumbForce,JumbState,CalDashForce,DashState,CalLongJumbForce,LongJumbState,Rigidbody.drag);
+            JumbState = false;
+            DashState = false;
+            LongJumbState = false; 
+            ClientPostionArray[Current_Tick] = Rigidbody.transform.position;
         }
-        JumbState = false;
     }
 
     private bool HandleCorrection()
     {
         if (Currently_Correcting == true){
-            print($"Corrected by:{ClientPostionArray[ServerCurrentTick] - ServerPostionArray[ServerCurrentTick]}");
             if (ServerCurrentTick != Current_Tick){
-                MovementServerRpc(new Vector3(0,0,0),0);
+                Vector3 Normal = new Vector3(0,0,0);
+                MovementServerRpc(Normal,Normal,false,Normal,false,Normal,false,Rigidbody.drag);
                 Currently_Correcting = true; 
                 return false;
                 }else{
                 Currently_Correcting = false;
             }
         }
+        
         Vector3 smoother = Vector3.Lerp(Rigidbody.transform.position,ServerPostion,0.075f);
         Rigidbody.transform.position = smoother;
+        print($"Corrected by:{Rigidbody.transform.position - ServerPostion}");
         return true;
     }
 
     [ServerRpc]
-    private void MovementServerRpc(Vector3 Force, float JumbForce)
-    {
+    private void MovementServerRpc(Vector3 Force, Vector3 JumbForce, bool JumbState, Vector3 DashForce,bool DashState,Vector3 LongJumbForce,bool LongJumbState,float drag){
         if (ServerCurrentTick >= 512) ServerCurrentTick = 0;
         ServerCurrentTick ++;
-        if (Vector3.Distance(Rigidbody.velocity ,new Vector3(0,0,0))> 5){
-            Force = new Vector3(0, 0, 0);
-        }
-        Rigidbody.AddForce(new Vector3(0, JumbForce, 0),ForceMode.Impulse);
+        Rigidbody.drag = drag;
         Rigidbody.AddForce(Force, ForceMode.Acceleration);
+        if (JumbState == true){
+            Rigidbody.AddForce(JumbForce,ForceMode.Impulse);
+        }
+        if (DashState == true){
+            Rigidbody.AddForce(DashForce,ForceMode.Impulse);
+        }
+        if (LongJumbState == true){
+            Rigidbody.AddForce(LongJumbForce,ForceMode.Impulse);
+        }
         ServerPostion = Rigidbody.transform.position;
         positionClientRpc(OwnerClientId, ServerPostion, ServerCurrentTick);
-        EveryClientRpc(ServerPostion, Rigidbody.velocity); 
+        EveryClientRpc(ServerPostion, Rigidbody.velocity , Rigidbody.transform.eulerAngles); 
     }
 
     [ServerRpc]
-    private void JumbServerRpc(Vector3 JumbForce){
-        Rigidbody.AddForce(JumbForce,ForceMode.Impulse);
+    private void RotationServerRpc(Vector3 Rotaion){
+        Rigidbody.transform.eulerAngles = Rotaion;
     }
 
     [ClientRpc]
@@ -187,9 +281,10 @@ public class Movement : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void EveryClientRpc(Vector3 Pos , Vector3 speed){
+    private void EveryClientRpc(Vector3 Pos , Vector3 speed , Vector3 angle){
         Vector3 SmoothedPosition = Vector3.Lerp(Rigidbody.transform.position,Pos,0.075f);
         Rigidbody.transform.position = SmoothedPosition;
         Rigidbody.velocity = speed;
+        Rigidbody.transform.eulerAngles = angle;
     }
 }

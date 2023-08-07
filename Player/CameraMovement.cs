@@ -9,12 +9,13 @@ public class CameraMovement : MonoBehaviour
     public bool TrackPosition;
     public bool Y_axisRotation;
     public GameObject TrackObject;
+    public GameObject NetworkObject;
 
     
-    public float rotationSpeed = 3f;
+    public float rotationSpeed;
     private float rotationX = 0f;
     private float rotationY = 0f;
-    private float smoothSpeed = 0.25f;
+    private float smoothSpeed = 0.4f;
 
     void TrackPositionFun()
     {
@@ -24,6 +25,11 @@ public class CameraMovement : MonoBehaviour
             Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
             transform.position = smoothedPosition;
         }
+    }
+
+    void Start(){
+        rotationSpeed = NetworkObject.GetComponent<Movement>().rotationSpeed;
+        rotationY = TrackObject.transform.eulerAngles.y;
     }
 
     void LateUpdate()
@@ -41,7 +47,6 @@ public class CameraMovement : MonoBehaviour
             if (TrackPosition == true){
                 TrackPositionFun();
             }
-
         }
     }
 }
