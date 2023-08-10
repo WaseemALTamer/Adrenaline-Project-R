@@ -17,13 +17,11 @@ public class CameraMovement : MonoBehaviour
     private float rotationX = 0f;
     private float rotationY = 0f;
     private float smoothSpeed = 0.325f;
-    private float CalSmoothed;
 
     void TrackPositionFun()
     {
         if (TrackObject != null){
             Vector3 desiredPosition = TrackObject.transform.position + new Vector3(0f, 0.8f, 0f);
-            CalSmoothed = smoothSpeed;
             Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
             transform.position = smoothedPosition;
         }

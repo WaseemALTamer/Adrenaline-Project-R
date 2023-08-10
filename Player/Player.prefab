@@ -102,19 +102,21 @@ MonoBehaviour:
   Acceleration: 20
   rotationSpeed: 1
   TerminalVelocity: 6
-  JumbForce: {x: 0, y: 300, z: 0}
+  JumbForce: {x: 0, y: 350, z: 0}
   GroundLayer:
     serializedVersion: 2
     m_Bits: 8
   WallLayer:
     serializedVersion: 2
     m_Bits: 64
+  SlopeLayer:
+    serializedVersion: 2
+    m_Bits: 128
   DashAvalibality: 1
   DashButton: 101
-  DashForce: {x: 0, y: 0, z: 400}
+  DashForce: {x: 0, y: 0, z: 500}
   DashDragTime: 0.4
   DashCoolDown: 2
-  CalDashForce: {x: 0, y: 0, z: 0}
   TerminalVelocityDash: 9
   LongJumbAvalibality: 1
   LongJumbButton: 113
