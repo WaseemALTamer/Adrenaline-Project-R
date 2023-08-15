@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "zlOc67+wSOKQqTLKHGewWi8jGl2TmymUHE0a6kI27/My7o61YZaxUg3PhEPlKoqM2bCLrjn1HM3froFUHKK5tg==",
+  "success": true,
+  "projectFilePath": "E:\\Adrenaline Project R\\LobbyServer\\GameServerLobby\\GameServerLobby\\GameServerLobby.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Waseem AL Tamer\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,17 @@
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\GameServerLobby.exe
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\GameServerLobby.deps.json
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\GameServerLobby.runtimeconfig.json
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\GameServerLobby.dll
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\GameServerLobby.pdb
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.csproj.AssemblyReference.cache
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.GeneratedMSBuildEditorConfig.editorconfig
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.AssemblyInfoInputs.cache
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.AssemblyInfo.cs
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.csproj.CoreCompileInputs.cache
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.dll
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\refint\GameServerLobby.dll
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.pdb
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.genruntimeconfig.cache
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\ref\GameServerLobby.dll
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\bin\Debug\net6.0\Newtonsoft.Json.dll
+E:\Adrenaline Project R\LobbyServer\GameServerLobby\GameServerLobby\obj\Debug\net6.0\GameServerLobby.csproj.CopyComplete
